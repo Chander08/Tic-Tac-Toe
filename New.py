@@ -66,9 +66,13 @@ while True:
             if available_square ( clicked_row, clicked_row):
                 if player == 1:
                     mark_square( clicked_row, clicked_col, 1)
+                    player = 2
 
                 elif player == 2:
                     mark_square(clicked_row, clicked_col, 2)
+                    player = 1
+
+                
 
             
  
