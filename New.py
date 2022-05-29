@@ -40,6 +40,8 @@ def draw_line():
     pg.draw.line(screen, LINE_COLOUR, (400,0), (400,600), LINE_WIDTH)
 draw_line()
 
+game_over = False
+
 def draw_figures():
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS):
@@ -63,13 +65,78 @@ def is_board_full():
                 return False
     return True
 
+def check_win(player):
+    #vertical win check
+    for col in range(BOARD_COLS):
+        if board[0][col] == player and board[1][col] == player and board[2][col] == player:
+            draw_vertical_winning_line(col, player)
+            return True
+    #horizontal win check
+    for row in range(BOARD_ROWS):
+        if board[row][0] == player and board[row][1] == player and board[row][2] == player:
+            draw_horizontal_winning_line(row, player)
+            return True
+    #ascending diagonal win check
+    if board[2][0] == player and board[1][1] == player and board[0][2] == player:
+        draw_ascending_diagonal(player)
+        return True
+    #descending diagonal win check
+    if board[0][0] == player and board[1][1] == player and board[2][2] == player:
+        draw_descending_diagonal
+        return True
+
+    return False
+
+def draw_vertical_winning_line(col,player):
+    #200 is squares size
+    posX = col * 200 + 100 
+
+    if player == 1:
+        colour = CIRCLE_COLOUR
+    elif player == 2:
+        colour = BLACK
+
+    pg.draw.line( screen, colour, (posX, 15), (posX, HEIGHT - 15), 15)
+
+
+def draw_horizontal_winning_line(row,player):
+    posY = row * 200 + 100 
+    if player == 1:
+        colour = CIRCLE_COLOUR
+    elif player == 2:
+        colour = BLACK
+    pg.draw.line(screen, colour, (15, posY), (WIDTH -15 , posY), 15)
+
+def draw_ascending_diagonal(player):
+    if player == 1:
+        colour = CIRCLE_COLOUR
+    elif player == 2:
+        colour = BLACK
+    pg.draw.line(screen,colour, (15, HEIGHT - 15), (WIDTH - 15, 15), 15)
+
+def draw_descending_diagonal(player):
+    if player == 1:
+        colour = CIRCLE_COLOUR
+    elif player == 2:
+        colour = BLACK
+    pg.draw.line(screen, colour, (15,15), (WIDTH-15,HEIGHT-15), 15)
+
+def restart():
+    screen.fill(BG_COLOUR)
+    draw_line()
+    player = 1
+    for row in range(BOARD_ROWS):
+        for col in range(BOARD_COLS):
+            board[row][col] = 0
+            
+    
 
 while True:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             sys.exit()
         
-        if event.type == pg.MOUSEBUTTONDOWN:
+        if event.type == pg.MOUSEBUTTONDOWN and not game_over:
 
             mouseX = event.pos[0] #x
             mouseY = event.pos[1] #y
@@ -80,14 +147,22 @@ while True:
             if available_square ( clicked_row, clicked_col):
                 if player == 1:
                     mark_square( clicked_row, clicked_col, 1)
+                    if check_win(player):
+                        game_over = True
+
                     player = 2
 
                 elif player == 2:
                     mark_square(clicked_row, clicked_col, 2)
+                    if check_win(player):
+                        game_over = True
                     player = 1
 
                 draw_figures()
 
-            
+        if event.type == pg.KEYDOWN:
+            if event.key == pg.K_r:
+                restart()
+                game_over = False
  
     pg.display.update()
