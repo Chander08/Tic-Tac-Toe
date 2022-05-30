@@ -1,4 +1,5 @@
 # Tic-Tac-Toe
+from cmath import inf
 from turtle import bgcolor
 import pygame as pg
 import sys
@@ -153,33 +154,36 @@ def restart():
         for col in range(BOARD_COLS):
             board[row][col] = 0
 
-def negamax(is_computer_turn, depth):
+def negamax(is_computer_turn, depth, alpha, beta):
     #try making a move in an empty square (read from left to right bottom to top)
     #check eval
     #if move is a loss go next, if draw ok, if win make
     #defined so computer is player 2, can change later
     best_move_found = None
-    eval = 0
+    eval = -float(inf)
     if is_computer_turn:
-        player = 1
-    else:
         player = 2
-    if check_win_trial(player):
-        return 9999, best_move_found
-    elif check_win_trial(player):
-        return -9999,best_move_found
-    elif depth == 0: #don't look more than max depth
+        if check_win_trial(player): #if computer has a win
+            print("win found")
+            return 9999, best_move_found
+    else:
+        player = 1
+        if check_win_trial(player): #if opponent has a win
+            return -9999,best_move_found
+    if depth == 0: #don't look past max depth
         return eval,best_move_found
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS): 
             if available_square(row,col):
                 mark_square(row, col, player) #try all possible moves
-                new_eval = -1*negamax(not is_computer_turn, depth - 1)[0]
+                new_eval = max(eval, -negamax(not is_computer_turn, depth - 1, -beta, -alpha)[0])
                 unmark_square(row,col) #undo the move if eval not higher
                 if new_eval >= eval:
-                    print("updated")
                     best_move_found = [row, col]
-                    eval = new_eval
+                eval = new_eval
+                alpha = max(alpha, eval)
+                if alpha >= beta:
+                    return eval, best_move_found
     return eval, best_move_found
     
 while True:
@@ -203,11 +207,13 @@ while True:
 
                 player = 2
                 
-                eval, best_move= negamax(True, 10)
-                row = best_move[0]
-                col = best_move[1]
-                print(eval)
-                mark_square(row, col, player)
+                #computer move
+                eval, best_move= negamax(True, 9, -float(inf), float(inf))
+                if best_move!= None:
+                    row = best_move[0]
+                    col = best_move[1]
+                    print(eval)
+                    mark_square(row, col, player)
                 if check_win(player):
                     game_over = True
 
@@ -258,3 +264,4 @@ while True:
 #                 game_over = False
  
 #     pg.display.update()
+
