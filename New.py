@@ -3,7 +3,6 @@ from turtle import bgcolor
 import pygame as pg
 import sys
 import numpy as np
-#New File
 
 pg.init()
 WIDTH = 600
@@ -55,6 +54,9 @@ player = 1
 def mark_square(row, col, player):
     board[row][col]= player
 
+def unmark_square(row, col):
+    board[row][col]= 0
+
 def available_square(row,col):
     return board[row][col]== 0
 
@@ -83,6 +85,28 @@ def check_win(player):
     #descending diagonal win check
     if board[0][0] == player and board[1][1] == player and board[2][2] == player:
         draw_descending_diagonal
+        return True
+
+    return False
+
+def check_win_trial(player):
+    #vertical win check
+    for col in range(BOARD_COLS):
+        if board[0][col] == player and board[1][col] == player and board[2][col] == player:
+            #draw_vertical_winning_line(col, player)
+            return True
+    #horizontal win check
+    for row in range(BOARD_ROWS):
+        if board[row][0] == player and board[row][1] == player and board[row][2] == player:
+            #draw_horizontal_winning_line(row, player)
+            return True
+    #ascending diagonal win check
+    if board[2][0] == player and board[1][1] == player and board[0][2] == player:
+        #draw_ascending_diagonal(player)
+        return True
+    #descending diagonal win check
+    if board[0][0] == player and board[1][1] == player and board[2][2] == player:
+        #draw_descending_diagonal
         return True
 
     return False
@@ -128,9 +152,36 @@ def restart():
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS):
             board[row][col] = 0
-            
-    
 
+def negamax(is_computer_turn, depth):
+    #try making a move in an empty square (read from left to right bottom to top)
+    #check eval
+    #if move is a loss go next, if draw ok, if win make
+    #defined so computer is player 2, can change later
+    best_move_found = None
+    eval = 0
+    if is_computer_turn:
+        player = 1
+    else:
+        player = 2
+    if check_win_trial(player):
+        return 9999, best_move_found
+    elif check_win_trial(player):
+        return -9999,best_move_found
+    elif depth == 0: #don't look more than max depth
+        return eval,best_move_found
+    for row in range(BOARD_ROWS):
+        for col in range(BOARD_COLS): 
+            if available_square(row,col):
+                mark_square(row, col, player) #try all possible moves
+                new_eval = -1*negamax(not is_computer_turn, depth - 1)[0]
+                unmark_square(row,col) #undo the move if eval not higher
+                if new_eval >= eval:
+                    print("updated")
+                    best_move_found = [row, col]
+                    eval = new_eval
+    return eval, best_move_found
+    
 while True:
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -145,20 +196,24 @@ while True:
             clicked_col = int(mouseX // 200)
 
             if available_square ( clicked_row, clicked_col):
-                if player == 1:
-                    mark_square( clicked_row, clicked_col, 1)
-                    if check_win(player):
-                        game_over = True
+                player = 1
+                mark_square( clicked_row, clicked_col, 1)
+                if check_win(player):
+                    game_over = True
 
-                    player = 2
+                player = 2
+                
+                eval, best_move= negamax(True, 10)
+                row = best_move[0]
+                col = best_move[1]
+                print(eval)
+                mark_square(row, col, player)
+                if check_win(player):
+                    game_over = True
 
-                elif player == 2:
-                    mark_square(clicked_row, clicked_col, 2)
-                    if check_win(player):
-                        game_over = True
-                    player = 1
+                print(board)
 
-                draw_figures()
+        draw_figures()
 
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_r:
@@ -166,3 +221,40 @@ while True:
                 game_over = False
  
     pg.display.update()
+    
+#original 2 player code:
+# while True:
+#     for event in pg.event.get():
+#         if event.type == pg.QUIT:
+#             sys.exit()
+        
+#         if event.type == pg.MOUSEBUTTONDOWN and not game_over:
+
+#             mouseX = event.pos[0] #x
+#             mouseY = event.pos[1] #y
+
+#             clicked_row = int(mouseY // 200)
+#             clicked_col = int(mouseX // 200)
+
+#             if available_square ( clicked_row, clicked_col):
+#                 if player == 1:
+#                     mark_square( clicked_row, clicked_col, 1)
+#                     if check_win(player):
+#                         game_over = True
+
+#                     player = 2
+
+#                 elif player == 2:
+#                     mark_square(clicked_row, clicked_col, 2)
+#                     if check_win(player):
+#                         game_over = True
+#                     player = 1
+
+#                 draw_figures()
+
+#         if event.type == pg.KEYDOWN:
+#             if event.key == pg.K_r:
+#                 restart()
+#                 game_over = False
+ 
+#     pg.display.update()
